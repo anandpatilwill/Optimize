@@ -1,0 +1,40 @@
+data "atlas_blueprint" "main" {}
+
+resource "aws_resourcegroups_group" "blueprint" {
+  name = "tdome-eks-blueprint-${var.cluster_id}"
+  resource_query {
+    query = data.atlas_blueprint.main.resource_group_query
+  }
+  tags = data.atlas_blueprint.main.resource_group_tags
+}
+
+module "jpm_data" {
+  source  = "tfe.jpmchase.net/ATLAS-MODULE-REGISTRY/jpm-data/aws"
+  version = "8.0.0"
+}
+
+data "aws_subnets" "account_subnet_list" {
+  filter {
+    name   = "tag:Name"
+    values = slice(var.public_subnets, 0, var.public_subnets_count)
+  }
+}
+
+data "aws_subnet" "account_subnet" {
+  for_each = toset(data.aws_subnets.account_subnet_list.ids)
+  id       = each.value
+}
+
+module "aws_stack" {
+  source                = "tfe.jpmchase.net/ATLAS-MODULE-REGISTRY/aws-stack/aws"
+  version               = "2.5.1"
+  stack                 = local.stack
+  aws_access_key_id     = var.aws_access_key_id
+  aws_secret_access_key = var.aws_secret_access_key
+  aws_session_token     = var.aws_session_token
+  aws_account_id        = var.aws_account_id
+  region                = var.aws_region
+  pattern               = local.pattern
+  profile               = local.profile
+  pipeline              = var.pipeline
+}
