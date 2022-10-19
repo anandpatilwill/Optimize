@@ -1,0 +1,108 @@
+# (Normally) Populated by tfl or the jules pipeline
+variable "aws_region" {
+  description = "The region where the infrastructure should be deployed to. Update this based on the region you are planning to deploy to"
+  type        = string
+}
+
+variable "aws_access_key_id" {
+  description = "The AWS Account ID to use for authentication"
+  type        = string
+}
+
+variable "aws_secret_access_key" {
+  description = "The secret key to use for AWS Authenitcation"
+  type        = string
+}
+
+variable "aws_session_token" {
+  description = "The session token to use for authentication"
+  type        = string
+}
+
+variable "aws_sts_region" {
+  description = "The AWS STS region used. The primary site is us-east-1 but is dynamically updated to a different one by Jules if an outage is happening"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "pipeline" {
+  type    = any
+  default = {}
+}
+
+# Provided by engineering team
+variable "aws_account_id" {
+  description = "The Account in which to deploy infrastructure"
+  type        = string
+}
+
+variable "app_id" {
+  type = string
+  description = "The application id used in the name of the stack."
+}
+
+variable "stack_id" {
+  type = string
+}
+
+variable "cluster_id" {
+  type = string
+}
+
+variable "stack_description" {
+  type = string
+  description = "Human readable description of what the stack is used for."
+  default = "EKS Microservices for Tdome"
+}
+
+
+variable tfe_organization {
+  description = "The organization in TFE that we will pull the state from"
+  type = string
+}
+
+variable "public_subnets" {
+  type = list(string)
+  default = ["PublicSubnet01","PublicSubnet02","PublicSubnet03","PublicSubnet04"]
+}
+
+variable "public_subnets_count" {
+  type = number
+  default = 2
+}
+
+
+variable "msk_cluster_name" {
+  description = "MSK Cluster name"
+  type        = string
+}
+
+variable "msk_cluster_kms_key" {
+  description = "Msk MKS key alias"
+  type        = string
+}
+
+variable "config" {
+  type = object({
+    eks = object({
+
+      cluster_owner      = string
+      cluster_owner_role = string
+
+      ingress = object({
+        certificate_arns = map(list(string))
+      })
+
+      namespaces = map(
+        object({
+          managers = list(string)
+          users    = list(string)
+        })
+      )
+
+      node_groups = any
+      extensions = any
+    })
+  })
+  description = "Environment specific configurations"
+}
